@@ -1,0 +1,19 @@
+.hoverItem {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.hoverItem::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 0%;
+    height: 2px;
+    background-color: white; /* หรือใช้สีที่เมต้องการ */
+    transition: width 0.3s ease;
+}
+
+.hoverItem:hover::after {
+    width: 100%;
+}
