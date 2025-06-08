@@ -1,13 +1,15 @@
-import { getFirestore , setDoc , doc   ,addDoc , collection, getDocs} from "firebase/firestore";
+import { getFirestore , setDoc , doc   ,addDoc , collection, getDocs , writeBatch} from "firebase/firestore";
 import { app } from "./firebase";
 import { auth } from "./UserAuth";
 
+import { connectFirestoreEmulator } from "firebase/firestore";
+
 // โครงสร้าง firestore
-// users/{userid}/studyplan/{studyplanid}/planStructure/{planStrutureid}/subPlanStructure/{subPalanStructureID}
+// users/{userid}/studyplan/{studyplanid}/planStructure/{planStrutureId}/subStructure/{subStructureId}
 //  studyplan มีอันเดียวเป็นหลักสูตรที่เรียน --> ชื่อหลักสูตร , collection structure
-//   structure เป็นโครงสร้างหลักสูตรมีหลายโครสร้างเช่น หมวดศึกษาทั่วไป 30หน่วยกิต , หมวดวิชาเฉพาะ 88 หน่วย...
-//  subStructure เป็นตัวอธิบายในหมวดนั้นๆ เช่น หมวดศึกษาทั่วไป 30 มี -> หมวดA 10 , B 20 , C 5 ,D 5 ประมาณนี้
-// 
+//  planStructure --> ขื่อหมวดหมู่หลัก ชื่อหมวดหมู่ย่อย หน่วยกิตย่อย 
+//  
+//  ถ้าหมวดหมู่ย่อยไม่มีให้เพิ่มหมวดหมู่ย่อยเป็นอันเดียวกับหมวดหมู่หลัก
 // 
 // 
 
@@ -17,6 +19,7 @@ import { auth } from "./UserAuth";
 
 
 const db = getFirestore(app)
+connectFirestoreEmulator(db,'localhost',8080)
 
 const createUserDocAfterRegistered = async () =>{
     try{
@@ -33,18 +36,22 @@ const getUserStudyplan = async (userid) => {
         console.log("get studyplan")
         return data
     }catch(err){
+        console.log(err)
         throw new Error(err)
     }
 }
-const addUserStudyplanDetail = async (userid)=>{
-
+const addUserStudyplanFields= async (userid , planData)=>{
+    try{
+        const plan = await addDoc(collection(db,'users',userid,'studyplan') ,  planData)
+        console.log("add user's studyplan details")
+        return plan.id
+    }catch(err){
+        console.log(err)
+        throw new Error(err)
+    }
 }
-const updateUserStudyplan = async (userid)=>{
 
-}
 
-const getUserClasses = async (userid) =>{
 
-}
 
-export {createUserDocAfterRegistered , getUserStudyplan , getUserClasses}
+export {createUserDocAfterRegistered , getUserStudyplan ,addUserStudyplanFields , addAllPlanStructureKnowPlanID}

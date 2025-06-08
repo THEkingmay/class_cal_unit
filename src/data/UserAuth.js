@@ -8,9 +8,10 @@ import {
   sendPasswordResetEmail
 } from "firebase/auth";
 
+import { connectAuthEmulator } from "firebase/auth";
+
 const auth = getAuth(app);
-
-
+connectAuthEmulator(auth, "http://localhost:9099");
 const register = async (email, password) => {
   if (email === "" || password === "")
     throw new Error("Input email and password");

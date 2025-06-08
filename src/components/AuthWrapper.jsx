@@ -2,7 +2,7 @@
 import { useEffect, useState, createContext } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { getUserStudyplan , getUserClasses } from '../data/fireStore'
+import { getUserStudyplan  } from '../data/fireStore'
 
 import { auth } from '../data/UserAuth'
 import Loading from '../items/Loading'
