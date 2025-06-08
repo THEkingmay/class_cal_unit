@@ -2,6 +2,20 @@ import { getFirestore , setDoc , doc   ,addDoc , collection, getDocs} from "fire
 import { app } from "./firebase";
 import { auth } from "./UserAuth";
 
+// โครงสร้าง firestore
+// users/{userid}/studyplan/{studyplanid}/planStructure/{planStrutureid}/subPlanStructure/{subPalanStructureID}
+//  studyplan มีอันเดียวเป็นหลักสูตรที่เรียน --> ชื่อหลักสูตร , collection structure
+//   structure เป็นโครงสร้างหลักสูตรมีหลายโครสร้างเช่น หมวดศึกษาทั่วไป 30หน่วยกิต , หมวดวิชาเฉพาะ 88 หน่วย...
+//  subStructure เป็นตัวอธิบายในหมวดนั้นๆ เช่น หมวดศึกษาทั่วไป 30 มี -> หมวดA 10 , B 20 , C 5 ,D 5 ประมาณนี้
+// 
+// 
+// 
+
+// users/{usersid}/classes/...
+
+
+
+
 const db = getFirestore(app)
 
 const createUserDocAfterRegistered = async () =>{
@@ -15,7 +29,7 @@ const createUserDocAfterRegistered = async () =>{
 
 const getUserStudyplan = async (userid) => {
     try{
-       const data =  await getDocs(collection(db, 'users' , userid,'studyplan')) 
+       const data =  await getDocs(collection(db, 'users' , userid , 'studyplan')) 
         console.log("get studyplan")
         return data
     }catch(err){
@@ -33,4 +47,4 @@ const getUserClasses = async (userid) =>{
 
 }
 
-export {createUserDocAfterRegistered , getUserStudyplan}
+export {createUserDocAfterRegistered , getUserStudyplan , getUserClasses}

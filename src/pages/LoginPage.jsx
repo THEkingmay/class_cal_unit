@@ -16,7 +16,7 @@ export default function LoginPage() {
     const handleSubmit = async (e) => {
         e.preventDefault()
         try {
-            if (email === '' || password === '') throw new Error("Input email and password")
+            if (email === '' || password === '') throw new Error("กรุณากรอกอีเมลและรหัสผ่าน")
             setLoad(true)
             if (isLogin) {
                 await login(email, password)
@@ -38,10 +38,10 @@ export default function LoginPage() {
     const handleResetPassword = async (e) => {
         e.preventDefault()
         try {
-            if (email === '') throw new Error("Input email to send reset password link")
+            if (email === '') throw new Error("กรุณากรอกอีเมลเพื่อส่งลิงก์รีเซ็ตรหัสผ่าน")
             setLoad(true)
             await resetPassword(email)
-            setAlertMsg("Send link to reset password")
+            setAlertMsg("ส่งลิงก์รีเซ็ตรหัสผ่านเรียบร้อยแล้ว")
             setAlertType("success")
         } catch (err) {
             setAlertType("error")
@@ -58,34 +58,34 @@ export default function LoginPage() {
     return (
         <div className="container d-flex justify-content-center align-items-center">
             <div className="card p-4 shadow mt-5" style={{ maxWidth: "400px", width: "100%" }}>
-                <h2 className="text-center mb-4">{isLogin ? 'Login' : 'Register'}</h2>
+                <h2 className="text-center mb-4">{isLogin ? 'เข้าสู่ระบบ' : 'สมัครสมาชิก'}</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
-                        <label className="form-label">Email</label>
+                        <label className="form-label">อีเมล</label>
                         <input
                             type="email"
                             className="form-control"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Enter email"
+                            placeholder="กรอกอีเมลของคุณ"
                         />
                     </div>
                     <div className="mb-3">
-                        <label className="form-label">Password</label>
+                        <label className="form-label">รหัสผ่าน</label>
                         <div className="input-group">
                             <input
                                 type={showPass ? "text" : "password"}
                                 className="form-control"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Enter password"
+                                placeholder="กรอกรหัสผ่าน"
                             />
                             <button
                                 type="button"
                                 className="btn btn-outline-secondary"
                                 onClick={() => setShowPass(!showPass)}
                             >
-                                {showPass ? "Hide" : "Show"}
+                                {showPass ? "ซ่อน" : "แสดง"}
                             </button>
                         </div>
                     </div>
@@ -95,12 +95,12 @@ export default function LoginPage() {
                             className="btn btn-link p-0"
                             onClick={handleResetPassword}
                         >
-                            Forgot password?
+                            ลืมรหัสผ่าน?
                         </a>
                     </div>
                     <div className="d-grid mb-3">
                         <button type="submit" className="btn btn-primary">
-                            {isLogin ? "Login" : "Register"}
+                            {isLogin ? "เข้าสู่ระบบ" : "สมัครสมาชิก"}
                         </button>
                     </div>
                     <div className="text-center">
@@ -109,7 +109,7 @@ export default function LoginPage() {
                             className="btn btn-link"
                             onClick={() => setIsLogin(!isLogin)}
                         >
-                            {isLogin ? "Don't have an account? Register" : "Already have an account? Login"}
+                            {isLogin ? "ยังไม่มีบัญชี? สมัครสมาชิก" : "มีบัญชีแล้ว? เข้าสู่ระบบ"}
                         </a>
                     </div>
                 </form>

@@ -8,9 +8,9 @@ export default function Loading({ status }) {
         >
             <div className="text-center text-white">
                 <div className="spinner-grow text-light" role="status" style={{ width: '3rem', height: '3rem' }}>
-                    <span className="visually-hidden">Loading...</span>
+                    <span className="visually-hidden">กำลังโหลด...</span>
                 </div>
-                <p className="mt-3">Loading, please wait...</p>
+                <p className="mt-3">กำลังโหลด กรุณารอสักครู่...</p>
             </div>
         </div>
     );

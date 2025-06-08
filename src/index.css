@@ -1,0 +1,4 @@
+body, html, .btn, .navbar, .form-control, .card, .nav-link {
+  font-family: 'Kanit', sans-serif;
+  font-weight: 300; /* ปรับให้บางลง (ค่าอื่น: 100, 200 ก็ได้) */
+}
