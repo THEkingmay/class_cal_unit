@@ -1,4 +1,4 @@
-import { getFirestore , setDoc , doc   ,addDoc , collection, getDocs , writeBatch} from "firebase/firestore";
+import { getFirestore , setDoc , doc   ,addDoc , collection, getDocs , writeBatch , collectionGroup} from "firebase/firestore";
 import { app } from "./firebase";
 import { auth } from "./UserAuth";
 
@@ -40,9 +40,29 @@ const getUserStudyplan = async (userid) => {
         throw new Error(err)
     }
 }
+const getStructurePlan = async (userId , planId) =>{
+    try{
+        const structurePlan = await getDocs(collection(db,'users',userId,'studyplan',planId,'structure'))
+        console.log("get plan Structure")
+        return structurePlan
+    }catch(err){
+        console.log(err.message)
+    }
+}
+const getSubStructure = async ( ) =>{
+    try{
+        const data = await getDocs(collectionGroup(db,"subStructure"))
+        console.log("get all sub structure")
+        return data
+    }catch(err){
+        console.log(err.message)
+    }
+ }
+
+
 const addUserStudyplanFields= async (userid , planData)=>{
     try{
-        const plan = await addDoc(collection(db,'users',userid,'studyplan') ,  planData)
+        const plan = await addDoc(collection(db,'users',userid,'studyplan') ,  planData)  // {studyplanName : '....' , allUnit: ... } 
         console.log("add user's studyplan details")
         return plan.id
     }catch(err){
@@ -54,4 +74,4 @@ const addUserStudyplanFields= async (userid , planData)=>{
 
 
 
-export {createUserDocAfterRegistered , getUserStudyplan ,addUserStudyplanFields , addAllPlanStructureKnowPlanID}
+export {createUserDocAfterRegistered , getUserStudyplan ,getStructurePlan, getSubStructure ,addUserStudyplanFields  }

@@ -44,7 +44,7 @@ export default function Dashboard() {
           <h5 className="card-title">เนื้อหาหลักในแดชบอร์ด</h5>
           <p className="card-text text-muted">
             แผนการเรียน ไอดี : {studyPlanData[0].id || ""}<br/>
-            ชื่อแผนการเรียน : {studyPlanData[0].data.name || ""}<br/>
+            ชื่อแผนการเรียน : {studyPlanData[0].data.studyplanName || ""}<br/>
             หน่วยกิตรวม : {studyPlanData[0].data.allUnit || ""}<br/>
             <br/>
             (ตรงนี้เมจะใส่เนื้อหาวิเคราะห์แผนการเรียน เช่น จำนวนหน่วยกิต คอร์สที่ต้องเรียน เป็นต้น)
