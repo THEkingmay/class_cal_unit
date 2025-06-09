@@ -1,204 +1,451 @@
-import { useEffect, useState } from "react"
-import { useContext } from "react"
-import { AuthContext } from "../components/AuthWrapper"
-import { getStructurePlan ,getSubStructure } from "../data/fireStore"
+import { useEffect, useState, useContext } from "react";
+import { AuthContext } from "../components/AuthWrapper";
+import { getStructurePlan, getSubStructure , addUserStudyplanFields , addMainStructureToPlan , addSubStructureToMain} from "../data/fireStore";
 
+import Loading from "../items/Loading";
+import AlertMessage from "../items/AlertMessage";
 
-import Loading from "../items/Loading"
-import AlertMessage from "../items/AlertMessage"
+export default function StudyPlan() {
+    const [isLoad, setLoad] = useState(false);
+    const [alertType, setType] = useState("");
+    const [alertMsg, setMsg] = useState("");
+    const [isInputDisabled, setInputDis] = useState(false);
+    const [currMainID, setCurrMainId] = useState("");
 
+    const { currentUserID, studyPlanData , fetchUersStudyplan } = useContext(AuthContext);
 
-export default function StudyPlan(){
+    const [planDetail, setPlanDetail] = useState({
+        planName: "",
+        planAllUnit: 0,
+    });
 
-    const [isLoad , setLoad ] = useState(false)
-    const [alertType , setType ]  = useState("")
-    const [alertMsg , setMsg] = useState("")
-    const [isInputDisabled , setInputDis] = useState(false)
-    const [currMainID , setMainId ]= useState("")
+    const [mainCatagory, setMainCat] = useState([]);
 
-    const {currentUserID,studyPlanData } = useContext(AuthContext)
-
-    const [planDetail , setPlanDetail ] = useState({   // หรือเป็นค่าที่ส่งมาจาก context  getDocs(collection(db,'users' , userid ,'studyPlan'))
-        planName:"",
-        planAllUnit:""
-    })
-    
-    const [mainCatagory , setMainCat] = useState([])
-    // ถ้ามี plan อยู่แล้วจาก context
-    const fetchStrutureplan = async ()=>{
-        setLoad(true)
-        try{
-            const data = await getStructurePlan(currentUserID , studyPlanData[0].id)
-            const tmp = []
-            data.forEach(d=>{
-                tmp.push({
-                    id:d.id,  // id ของ structure document
-                    data:d.data()
-                })
-            })
-            setMainId(tmp[0].id) // ในหน้าแรกของหมวดหมู่ย่อยแสดงของหมวดแรก
-            setMainCat(tmp)
-        }catch(err){
-            setMsg(err.message)
-            setType("error")
-        }finally{
-            setLoad(false)
-            setTimeout(()=>{
-                setMsg("");setType("")
-            },2500)
+    const fetchStrutureplan = async () => {
+        if (!studyPlanData || studyPlanData.length === 0) return;
+        setLoad(true);
+        try {
+            const data = await getStructurePlan(currentUserID, studyPlanData[0].id);
+            setCurrMainId(data[0].id)
+            setMainCat(data);
+        } catch (err) {
+            console.log(err)
+            setType("error");
+            setMsg(err.message);
+        } finally {
+            setLoad(false);
+            setTimeout(() => {
+                setMsg(""); setType("");
+            }, 2500);
         }
-    }
+    };
 
-    const [subCatagory , setSubCat ] = useState([])
-    const fetchSubStructure = async () =>{
-        setLoad(true)
-        try{
-            const dataSub = await getSubStructure ()
-            let tmp = [] 
-            dataSub.forEach(d=>{
-                tmp.push({
-                    id:d.id,
-                    data:d.data()
-                })
-            })
-            setSubCat(tmp)
-            console.log(tmp)
-        }catch(err){
-            setMsg(err.message)
-            setType("error")
-        }finally{
-            setLoad(false)
-            setTimeout(()=>{
-                setMsg("");setType("")
-            },2500)
+    const handleMainCatagoryInput = (index, field, value) => {
+        const newMainCat = [...mainCatagory];
+        const updatedValue = field === "allUnit" ? Number(value || 0) : value;
+        newMainCat[index].data[field] = updatedValue;
+
+        // คำนวณหน่วยกิตรวม
+        const totalMainUnit = newMainCat.reduce((sum, item) => sum + Number(item.data.allUnit || 0), 0);
+
+        if (totalMainUnit > planDetail.planAllUnit) {
+            newMainCat[index].data[field] = 0
+            setMainCat(newMainCat);
+            setType("error");
+            setMsg("หน่วยกิตรวมของหมวดหมู่หลักเกินจากแผนการเรียนแล้ว");
+            setTimeout(() => {
+                setType(""); setMsg("");
+            }, 3000);
+            return;
         }
-    }
+
+        setMainCat(newMainCat);
+    };
+
+    const [subCatagory, setSubCat] = useState([]);
+
+    const [tmpSubStruct, setTmpSub] = useState({
+        id: `${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        data: {
+            allUnit: 0,
+            mainId: "",
+            subName: ""
+        }
+    });
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setTmpSub(prev => ({
+            ...prev,
+            data: {
+                ...prev.data,
+                [name]: name === "allUnit" ? Number(value || 0) : value
+            }
+        }));
+    };
+
+    const submitAddSub = () => {
+        const { allUnit, mainId, subName } = tmpSubStruct.data;
+
+        if (!allUnit || !mainId || !subName.trim()) {
+            setType('error');
+            setMsg("กรุณากรอกข้อมูลให้ครบ");
+            setTimeout(() => { setType(""); setMsg(""); }, 3000);
+            return;
+        }
+
+        const mainAllUnit = mainCatagory.find(m => m.id === mainId)?.data?.allUnit || 0;
+        const arraySameMain = subCatagory.filter(s => s.data.mainId === mainId);
+        const totalUnit = arraySameMain.reduce((sum, s) => sum + Number(s.data.allUnit || 0), allUnit);
+
+        if (totalUnit > mainAllUnit) {
+            setType('error');
+            setMsg("หน่วยกิตรวมเกิน");
+            setTimeout(() => { setType(""); setMsg(""); }, 3000);
+            return;
+        }
+
+        setSubCat(prev => [...prev, tmpSubStruct]);
+        setCurrMainId(mainId);
+        setTmpSub({
+            id: `${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            data: {
+                allUnit: 0,
+                mainId: "",
+                subName: ""
+            }
+        });
+
+        const modalElement = document.getElementById('subStructModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+        if (modalInstance) modalInstance.hide();
+
+        setType('success');
+        setMsg("เพิ่มหมวดหมู่ย่อยแล้ว");
+        setTimeout(() => { setType(""); setMsg(""); }, 3000);
+    };
+
+    const fetchSubStructure = async () => {
+        setLoad(true);
+        try {
+            const dataSub = await getSubStructure();
+            setSubCat(dataSub);
+        } catch (err) {
+            console.log(err)
+            setType("error");
+            setMsg(err.message);
+        } finally {
+            setLoad(false);
+            setTimeout(() => {
+                setMsg(""); setType("");
+            }, 2500);
+        }
+    };
 
     useEffect(() => {
-        setLoad(true)
-        if (studyPlanData.length>0) { // ถ้ามีแผนการเรียน
-            console.log(studyPlanData[0])
-            setInputDis(true) // ถ้ามีแผนการเรียนจะไม่ให้พิมพ์แก้ไขได้ ถ้าจะแก้ต้องมี modal เปิดปิดมา เรื่องของการ update
+        setLoad(true);
+        if (studyPlanData.length > 0) {
+            setInputDis(true);
             setPlanDetail({
-                planName: studyPlanData[0].data.studyplanName,
-                planAllUnit: Number(studyPlanData[0].data.allUnit)
-            })
-            fetchStrutureplan() // ถ้ามีแผนการเรียนให้เอา structure ออกมาด้วย
-            fetchSubStructure() // เอาอันย่อยด้วย
+                planName: studyPlanData[0].data.planName,
+                planAllUnit: Number(studyPlanData[0].data.planAllUnit || 0),
+            });
+            fetchStrutureplan();
+            fetchSubStructure();
         }
-        setLoad(false)
-    }, [studyPlanData])
-    
-    
-    const ADDALLFIRSTTIME = async () =>{
+        setLoad(false);
+    }, [studyPlanData]);
 
+    const SaveAllAtFirsttime = async (e)=>{
+        e.preventDefault()
+        console.log(planDetail.planAllUnit===0 , planDetail.planName , mainCatagory.length===0)
+        if(planDetail.planAllUnit===0 || planDetail.planName==='' || mainCatagory.length===0){
+            setMsg("กรอกข้อมูลหลักสูตรให้ครบ")
+            setType("error")
+            setTimeout(()=>{
+                setMsg("")
+                setType("")
+            },3000)
+            return
+        }
+        try{
+            setLoad(true)
+              // เพิ่ม planDetail ได้ planId
+            // เพิ่ม structure ด้วย planId ทีไ่ด้ โดยในช่องแต่ช่องของ mainCatagoty ที่มี id , data 
+            // เพิ่ม subStruc ด้วย structId ที่อยู่ใน field ของ data และมี subId ใน id  
+            // จากนั้นไปเรียก fetchPlan อีกครั้งนึงเพื่อรีเฟรช ใน AuthContext
+
+            const planId= await addUserStudyplanFields(currentUserID , planDetail)
+            await addMainStructureToPlan(currentUserID , planId , mainCatagory)
+            await addSubStructureToMain(currentUserID , planId , subCatagory)
+
+            fetchUersStudyplan() // โหลดใหม่อีกครั้งหลังบันทึกแล้ว
+
+            setMsg("บันทึกทั้งหมดสำเร็จ")
+            setType("success")
+        }catch(err){
+            setMsg(err.message)
+            setType("error")
+        }finally{
+            setLoad(false)
+            setTimeout(()=>{
+                setMsg("")
+                setType("")
+            },3000)
+        }
     }
 
-    return(
-        <div className="container pt-5" style={{minHeight:'1000px'}}>
-            <Loading status={false}/>
-            <AlertMessage type={alertType} msg={alertMsg}/>
+        return (
+        <div className="container pt-5">
+            <Loading status={false} />
+            <AlertMessage type={alertType} msg={alertMsg} />
+
             <div className="text-center mb-5">
-                <h1 className="display-4 fw-bold text-primary">แผนการเรียน</h1>
+            <h1 className="display-4 fw-bold text-primary">แผนการเรียน</h1>
             </div>
-            {!isLoad && <div>
-                <form>
-                    <div className="shadow-sm p-3">
-                        <div className="display-6">รายละเอียด</div>
-                        <div>
-                            <label>ชื่อคณะสาขา</label>
-                            <input disabled={isInputDisabled} value={planDetail.planName} type="text" onChange={(e)=>setPlanDetail((prev)=>({...prev , planName:e.target.value}))} />
+
+            {!isLoad && (
+            <form>
+                {/* รายละเอียดแผน */}
+                <div className="shadow-sm p-4 mb-4 bg-white rounded">
+                <h2 className="h4 mb-3">รายละเอียด</h2>
+                <div className="mb-3">
+                    <label className="form-label">ชื่อคณะสาขา</label>
+                    <input
+                    disabled={isInputDisabled}
+                    value={planDetail.planName}
+                    type="text"
+                    className="form-control"
+                    onChange={(e) =>
+                        setPlanDetail((prev) => ({ ...prev, planName: e.target.value }))
+                    }
+                    />
+                </div>
+                <div className="mb-3">
+                    <label className="form-label">หน่วยกิตรวมตลอดหลักสูตร</label>
+                    <input
+                    disabled={isInputDisabled}
+                    value={planDetail.planAllUnit}
+                    type="number"
+                    min={1}
+                    className="form-control"
+                    onChange={(e) =>
+                        setPlanDetail((prev) => ({
+                        ...prev,
+                        planAllUnit: Number(e.target.value || 0),
+                        }))
+                    }
+                    />
+                </div>
+                </div>
+
+                {/* หมวดหมู่หลัก */}
+                {planDetail.planName !== "" && planDetail.planAllUnit > 0 && (
+                <div className="shadow-sm p-4 mb-4 bg-white rounded">
+                    <h2 className="h4 mb-3">หมวดหมู่</h2>
+                    <p className="text-muted mb-3">
+                    คุณสามารถเพิ่มหน่วยกิตของหมวดหมู่รวมกันได้ไม่เกิน{' '}
+                    <strong>{planDetail.planAllUnit}</strong> หน่วยกิต
+                    </p>
+                    <button
+                    type="button"
+                    className="btn btn-primary mb-3"
+                    onClick={() => {
+                        const newCat = {
+                        id: `${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+                        data: {
+                            structureName: '',
+                            allUnit: 0,
+                        },
+                        };
+                        setMainCat((prev) => [...prev, newCat]);
+                        if (mainCatagory.length === 0) setCurrMainId(newCat.id);
+                    }}
+                    >
+                    เพิ่มหมวดหมู่
+                    </button>
+
+                    {mainCatagory.map((cat, i) => (
+                    <div key={cat.id} className="border p-3 mb-3 rounded bg-light">
+                        <div className="mb-2">
+                        <label className="form-label">
+                            {i + 1}. ชื่อหมวดหมู่หลัก
+                        </label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={cat.data.structureName}
+                            disabled={isInputDisabled}
+                            onChange={(e) =>
+                            handleMainCatagoryInput(i, 'structureName', e.target.value)
+                            }
+                        />
                         </div>
                         <div>
-                            <label>หน่วยกิตรวมตลอดหลักสูตร</label>
-                            <input disabled={isInputDisabled} value={planDetail.planAllUnit} type="number" min={1} onChange={(e)=>setPlanDetail((prev)=>({...prev , planAllUnit:Number(e.target.value)}))} />
+                        <label className="form-label">หน่วยกิตรวม</label>
+                        <input
+                            type="number"
+                            className="form-control"
+                            min={0}
+                            value={cat.data.allUnit}
+                            disabled={isInputDisabled}
+                            onChange={(e) =>
+                            handleMainCatagoryInput(i, 'allUnit', e.target.value)
+                            }
+                        />
                         </div>
                     </div>
-                    {  (planDetail.planName!=="" && planDetail.planAllUnit>0) &&
-                    <div className="p-3 shadow-sm">
-                       <div className="display-6">หมวดหมู่</div>
-                        <button type="button"  className="btn btn-primary" 
-                            onClick={()=>{
-                                setMainCat((prev)=>[
-                                    ...prev , 
-                                    {
-                                        id:`${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-                                        data:{
-                                            structureName:"",
-                                            allUnit:""
-                                        }
-                                    }
-                                ])
-                            }}
+                    ))}
+                </div>
+                )}
+
+                {/* หมวดหมู่ย่อย */}
+                {mainCatagory.length > 0 && (
+                <div className="shadow-sm p-4 mb-4 bg-white rounded">
+                    <h2 className="h4 mb-3">หมวดหมู่ย่อย</h2>
+
+                    <button
+                    type="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#subStructModal"
+                    className="btn btn-outline-secondary mb-3"
+                    >
+                    เพิ่มหมวดหมู่ย่อยในหมวดหมู่หลัก
+                    </button>
+
+                    <div className="mb-3">
+                    {mainCatagory.map((cat) =>
+                        cat.data.allUnit > 0 && cat.data.structureName ? (
+                        <button
+                            key={cat.id}
+                            onClick={() => setCurrMainId(cat.id)}
+                            type="button"
+                            className={`btn btn-sm btn-outline-primary me-2 mb-2 ${
+                            currMainID === cat.id ? 'active' : ''
+                            }`}
                         >
-                            เพิ่มหมวดหมู่{/*เพิ่มหมวดหมู่*/}
+                            {cat.data.structureName} ({cat.data.allUnit} หน่วยกิต)
                         </button>
-                       {mainCatagory.map((cat , i)=>
-                        <div key={cat.id}>
-                            {i+1} ชื่อหมวดหมู่ 
-                            <input type="text"  
-                            value={cat?.data?.structureName} 
-                            disabled={isInputDisabled}
-                            onChange={(e)=>{
-                                setMainCat((prev) =>
-                                    prev.map((c, idx) =>
-                                        idx === i
-                                        ? {
-                                            ...c,
-                                            data: {
-                                                ...c.data,
-                                                structureName: e.target.value,
-                                            },
-                                            }
-                                        : c
-                                    )
-                                    );
-                            }}
-                            />
-                            <input type="number"  
-                            value={cat?.data?.allUnit} 
-                            disabled={isInputDisabled}
-                            onChange={(e)=>{
-                                setMainCat((prev) =>
-                                    prev.map((c, idx) =>
-                                        idx === i
-                                        ? {
-                                            ...c,
-                                            data: {
-                                                ...c.data,
-                                                allUnit:Number( e.target.value),
-                                            },
-                                            }
-                                        : c
-                                    )
-                                    );
-                            }}
-                            />
-                        </div>
-                       )}
+                        ) : null
+                    )}
                     </div>
-                    }
-                    { mainCatagory.length>0 && 
-                    <div className="p-3 shadow-sm">
-                       <div className="display-6">หมวดหมู่ย่อย</div>
-                       <div>
-                            {mainCatagory.map(cat=>
-                                <button onClick={()=>setMainId(cat.id)} type="button" className={`btn btn-outline-primary  ${currMainID === cat.id? 'active' : ""}`} key={cat.id}>{cat.data.structureName} {cat.data.allUnit} หน่วยกิต</button>
-                            )}
-                       </div>
-                       <div>
-                            {subCatagory.map((sub)=>{
-                                if(currMainID===sub.data.mainId){
-                                    return(
-                                        <div>{sub.data.subName} : {sub.data.allUnit} หน่วยกิต</div>
-                                    )
-                                }
-                            })}
-                       </div>
+
+                    <div>
+                    {subCatagory?.length > 0 &&
+                        subCatagory.map(
+                        (sub) =>
+                            sub.data.mainId === currMainID && (
+                            <div
+                                key={sub.id}
+                                className="border p-3 mb-2 rounded bg-light"
+                            >
+                                <div>ชื่อหมวดหมู่ย่อย: {sub.data.subName}</div>
+                                <div>จำนวนหน่วยกิต: {sub.data.allUnit}</div>
+                            </div>
+                            )
+                        )}
                     </div>
-                    }
-                </form>
-            </div>}
+                </div>
+                )}
+
+                {/* ปุ่มบันทึก */}
+                {studyPlanData.length === 0 && (
+                <div className="text-end">
+                    <button
+                    className="btn btn-success"
+                    onClick={(e) => SaveAllAtFirsttime(e)}
+                    >
+                    บันทึกทั้งหมด
+                    </button>
+                </div>
+                )}
+            </form>
+            )}
+
+            {/* Modal */}
+            <div
+            className="modal fade"
+            id="subStructModal"
+            tabIndex="-1"
+            aria-labelledby="subStructModalLabel"
+            aria-hidden="true"
+            >
+            <div className="modal-dialog">
+                <div className="modal-content">
+                <div className="modal-header">
+                    <h5 className="modal-title" id="subStructModalLabel">
+                    เพิ่มหมวดหมู่ย่อย
+                    </h5>
+                    <button
+                    type="button"
+                    className="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                    ></button>
+                </div>
+                <div className="modal-body">
+                    <div className="mb-3">
+                    <label className="form-label">ชื่อหมวดหมู่ย่อย</label>
+                    <input
+                        type="text"
+                        className="form-control"
+                        name="subName"
+                        value={tmpSubStruct.data.subName}
+                        onChange={handleChange}
+                    />
+                    </div>
+                    <div className="mb-3">
+                    <label className="form-label">หน่วยกิตหมวดหมู่ย่อย</label>
+                    <input
+                        type="number"
+                        min={0}
+                        name="allUnit"
+                        className="form-control"
+                        value={tmpSubStruct.data.allUnit}
+                        onChange={handleChange}
+                    />
+                    </div>
+                    <div className="mb-3">
+                    <label className="form-label">อยู่ในหมวดหมู่หลัก</label>
+                    <select
+                        className="form-select"
+                        name="mainId"
+                        value={tmpSubStruct.data.mainId}
+                        onChange={handleChange}
+                    >
+                        <option value="">-- กรุณาเลือกหมวดหมู่หลัก --</option>
+                        {mainCatagory.map(
+                        (cat) =>
+                            cat.data.structureName !== '' &&
+                            cat.data.allUnit > 0 && (
+                            <option key={cat.id} value={cat.id}>
+                                {cat.data.structureName}
+                            </option>
+                            )
+                        )}
+                    </select>
+                    </div>
+                </div>
+                <div className="modal-footer">
+                    <button
+                    type="button"
+                    className="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                    >
+                    ปิด
+                    </button>
+                    <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={submitAddSub}
+                    >
+                    บันทึก
+                    </button>
+                </div>
+                </div>
+            </div>
+            </div>
         </div>
-    )
+        );
+
 }

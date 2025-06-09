@@ -31,7 +31,7 @@ export default function AlertMessage({ type, msg }) {
     return (
         <div>
             <div
-                className="modal fade"
+                className="modal fade alert-message"
                 ref={modalRef}
                 tabIndex="-1"
                 role="dialog"

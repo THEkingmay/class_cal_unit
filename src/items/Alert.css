@@ -1,3 +1,10 @@
+.modal.alert-message {
+  z-index: 2000 !important; /* สูงกว่า Bootstrap modal (z-index 1050) */
+}
+.modal-backdrop.alert-backdrop {
+  z-index: 1990 !important;
+}
+
 .modal-content {
   border-radius: 30px;
 }

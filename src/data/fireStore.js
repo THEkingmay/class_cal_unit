@@ -43,22 +43,32 @@ const getUserStudyplan = async (userid) => {
 const getStructurePlan = async (userId , planId) =>{
     try{
         const structurePlan = await getDocs(collection(db,'users',userId,'studyplan',planId,'structure'))
-        console.log("get plan Structure")
-        return structurePlan
-    }catch(err){
+        console.log("get plan Structure : ")
+         const result = structurePlan.docs.map(doc => ({
+          id: doc.id,
+          data: doc.data(), // หรือแยกแบบละเอียดก็ได้
+        }));
+
+        return result;
+
+      }catch(err){
         console.log(err.message)
     }
 }
 const getSubStructure = async ( ) =>{
     try{
         const data = await getDocs(collectionGroup(db,"subStructure"))
-        console.log("get all sub structure")
-        return data
+        console.log("get all sub structure : ")
+        const result = data.docs.map(doc => ({
+          id: doc.id,
+          data: doc.data(), // หรือแยกแบบละเอียดก็ได้
+        }));
+
+        return result;
     }catch(err){
         console.log(err.message)
     }
  }
-
 
 const addUserStudyplanFields= async (userid , planData)=>{
     try{
@@ -71,7 +81,43 @@ const addUserStudyplanFields= async (userid , planData)=>{
     }
 }
 
+const addMainStructureToPlan = async (userId, planId, mainCategory) => {
+  if (!Array.isArray(mainCategory) || mainCategory.length === 0) return;
+    // mainCat : {
+    //  id ,
+    //  data:{
+    //          allUnit, 
+    //         structureName
+    //  }}
+    try {
+    await Promise.all(mainCategory.map(cat =>
+      setDoc(doc(db, 'users', userId, 'studyplan', planId, 'structure', cat.id), cat.data)
+    ));
+    console.log("Added main structure");
+  } catch (err) {
+    console.error("Error adding main structure:", err);
+    throw err;
+  }
+}
+const addSubStructureToMain = async (userId, planId, subCategory) => {
+  if (!Array.isArray(subCategory) || subCategory.length === 0) return;
+    // subCat : {
+    //     id ,
+    //     data:{
+    //         allUnit,
+    //         mainId,
+    //         subName
+    //     }
+    // }
+   try {
+    await Promise.all(subCategory.map(sub =>
+      setDoc(doc(db, 'users', userId, 'studyplan', planId, 'structure', sub.data.mainId, 'subStructure', sub.id), sub.data)
+    ));
+    console.log("Added sub structure");
+  } catch (err) {
+    console.error("Error adding sub structure:", err);
+    throw err;
+  }
+}
 
-
-
-export {createUserDocAfterRegistered , getUserStudyplan ,getStructurePlan, getSubStructure ,addUserStudyplanFields  }
+export {createUserDocAfterRegistered , addSubStructureToMain,  getUserStudyplan ,getStructurePlan, getSubStructure ,addUserStudyplanFields , addMainStructureToPlan  }
