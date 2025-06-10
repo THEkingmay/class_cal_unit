@@ -247,7 +247,7 @@ export default function StudyPlan() {
                     คุณสามารถเพิ่มหน่วยกิตของหมวดหมู่รวมกันได้ไม่เกิน{' '}
                     <strong>{planDetail.planAllUnit}</strong> หน่วยกิต
                     </p>
-                    <button
+                    {studyPlanData.length===0 && <button
                     type="button"
                     className="btn btn-primary mb-3"
                     onClick={() => {
@@ -263,7 +263,7 @@ export default function StudyPlan() {
                     }}
                     >
                     เพิ่มหมวดหมู่
-                    </button>
+                    </button>}
 
                     {mainCatagory.map((cat, i) => (
                     <div key={cat.id} className="border p-3 mb-3 rounded bg-light">
