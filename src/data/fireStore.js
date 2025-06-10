@@ -19,7 +19,7 @@ import { connectFirestoreEmulator } from "firebase/firestore";
 
 
 const db = getFirestore(app)
-connectFirestoreEmulator(db,'localhost',8080)
+// connectFirestoreEmulator(db,'localhost',8080)
 
 const createUserDocAfterRegistered = async () =>{
     try{
