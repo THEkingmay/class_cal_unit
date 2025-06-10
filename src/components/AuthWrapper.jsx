@@ -3,6 +3,7 @@ import { useEffect, useState, createContext } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { getUserStudyplan  } from '../data/fireStore'
+import { getStructurePlan, getSubStructure } from "../data/fireStore";
 
 import { auth } from '../data/UserAuth'
 import Loading from '../items/Loading'
@@ -18,20 +19,27 @@ export default function AuthWrapper({ children }) {
   const navigate = useNavigate()
   const location = useLocation()
 
+  const [mainCatagoryContext , setMainCat] = useState([]);
+  const [subCatagoryContext , setSubCat] = useState([]);
+
   const fetchUersStudyplan = async () =>{
           try{
               const data = await getUserStudyplan(currentUserID)
               const tmp=[]
               data.forEach(d=>tmp.push({id:d.id , data: d.data()}))            
-              setPlanData(tmp)
+              setPlanData(tmp) 
+                          // ใช้ tmp ตรงนี้แทนรอ state update
+              if (tmp.length > 0) {
+                const main = await getStructurePlan(currentUserID, tmp[0].id)
+                setMainCat(main)
+              }
+              const sub = await getSubStructure(currentUserID, tmp[0].id)
+              setSubCat(sub)
               console.log(tmp)
           }catch(err){
               console.log(err.message)
           }
       }
-    const fetchUserClasses = async () =>{
-      // get classes after login for context
-    }
   useEffect(() => {
     setLoading(true)
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -42,6 +50,8 @@ export default function AuthWrapper({ children }) {
         setUID(null)
         setCurrEmail(null)
         setPlanData([])
+        setMainCat([])
+        setSubCat([])
       }
       if (!user && location.pathname !== '/loginRegister') {
         navigate('/loginRegister')
@@ -54,9 +64,10 @@ export default function AuthWrapper({ children }) {
   }, [navigate, location.pathname])
 
   useEffect(() => {
-    if (currentUserID) {
+    let hasFetched = false;
+    if (currentUserID && !hasFetched) {
       fetchUersStudyplan()
-      fetchUserClasses()
+      hasFetched = true
     }
   }, [currentUserID]) // after login ถ้าไอดีไม่เปลี่ยน ไม่เรียกเพราะจะได้ประหยัดโควต้าการเรียก firestore
  
@@ -66,7 +77,7 @@ export default function AuthWrapper({ children }) {
     }
 
   return (
-    <AuthContext.Provider value={{ currentUserID, currEmail , navigate , studyPlanData , fetchUersStudyplan}}>
+    <AuthContext.Provider value={{ currentUserID, currEmail , navigate , studyPlanData ,mainCatagoryContext  ,subCatagoryContext , fetchUersStudyplan}}>
       {children}
     </AuthContext.Provider>
   )

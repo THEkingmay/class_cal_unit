@@ -19,7 +19,7 @@ import { connectFirestoreEmulator } from "firebase/firestore";
 
 
 const db = getFirestore(app)
-// connectFirestoreEmulator(db,'localhost',8080)
+connectFirestoreEmulator(db,'localhost',8080)
 
 const createUserDocAfterRegistered = async () =>{
     try{
@@ -41,34 +41,44 @@ const getUserStudyplan = async (userid) => {
     }
 }
 const getStructurePlan = async (userId , planId) =>{
+  console.log("TESt")
     try{
         const structurePlan = await getDocs(collection(db,'users',userId,'studyplan',planId,'structure'))
-        console.log("get plan Structure : ")
          const result = structurePlan.docs.map(doc => ({
           id: doc.id,
           data: doc.data(), // หรือแยกแบบละเอียดก็ได้
         }));
-
+         console.log("get plan Structure  : " , result)
         return result;
 
       }catch(err){
         console.log(err.message)
     }
 }
-const getSubStructure = async ( ) =>{
-    try{
-        const data = await getDocs(collectionGroup(db,"subStructure"))
-        console.log("get all sub structure : ")
-        const result = data.docs.map(doc => ({
-          id: doc.id,
-          data: doc.data(), // หรือแยกแบบละเอียดก็ได้
-        }));
+  const getSubStructure = async (userId, planId) => {
+    try {
+      const structDocs = await getDocs(collection(db, 'users', userId, 'studyplan', planId, 'structure'));
+      const result = [];
+      // ใช้ for...of แทน map เพื่อให้ await ทำงานได้
+      for (const s of structDocs.docs) {
+        const tmp = await getDocs(
+          collection(db, 'users', userId, 'studyplan', planId, 'structure', s.id, 'subStructure')
+        );
 
-        return result;
-    }catch(err){
-        console.log(err.message)
+        tmp.forEach(t => {
+          result.push({
+            id: t.id,
+            data: t.data(),
+          });
+        });
+      }
+      console.log("get all sub structure: ", result);
+      return result;
+    } catch (err) {
+      console.log("Error getting subStructure:", err.message);
+      return [];
     }
- }
+  };
 
 const addUserStudyplanFields= async (userid , planData)=>{
     try{
@@ -120,4 +130,4 @@ const addSubStructureToMain = async (userId, planId, subCategory) => {
   }
 }
 
-export {createUserDocAfterRegistered , addSubStructureToMain,  getUserStudyplan ,getStructurePlan, getSubStructure ,addUserStudyplanFields , addMainStructureToPlan  }
+export {db, createUserDocAfterRegistered , addSubStructureToMain,  getUserStudyplan ,getStructurePlan, getSubStructure ,addUserStudyplanFields , addMainStructureToPlan  }

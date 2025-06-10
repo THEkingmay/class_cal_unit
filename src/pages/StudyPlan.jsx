@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../components/AuthWrapper";
-import { getStructurePlan, getSubStructure , addUserStudyplanFields , addMainStructureToPlan , addSubStructureToMain} from "../data/fireStore";
+import {  addUserStudyplanFields , addMainStructureToPlan , addSubStructureToMain} from "../data/fireStore";
 
 import Loading from "../items/Loading";
 import AlertMessage from "../items/AlertMessage";
@@ -12,7 +12,7 @@ export default function StudyPlan() {
     const [isInputDisabled, setInputDis] = useState(false);
     const [currMainID, setCurrMainId] = useState("");
 
-    const { currentUserID, studyPlanData , fetchUersStudyplan } = useContext(AuthContext);
+    const { currentUserID, studyPlanData , fetchUersStudyplan , mainCatagoryContext , subCatagoryContext } = useContext(AuthContext);
 
     const [planDetail, setPlanDetail] = useState({
         planName: "",
@@ -20,26 +20,7 @@ export default function StudyPlan() {
     });
 
     const [mainCatagory, setMainCat] = useState([]);
-
-    const fetchStrutureplan = async () => {
-        if (!studyPlanData || studyPlanData.length === 0) return;
-        setLoad(true);
-        try {
-            const data = await getStructurePlan(currentUserID, studyPlanData[0].id);
-            setCurrMainId(data[0].id)
-            setMainCat(data);
-        } catch (err) {
-            console.log(err)
-            setType("error");
-            setMsg(err.message);
-        } finally {
-            setLoad(false);
-            setTimeout(() => {
-                setMsg(""); setType("");
-            }, 2500);
-        }
-    };
-
+    const [subCatagory, setSubCat] = useState([]);
     const handleMainCatagoryInput = (index, field, value) => {
         const newMainCat = [...mainCatagory];
         const updatedValue = field === "allUnit" ? Number(value || 0) : value;
@@ -61,9 +42,6 @@ export default function StudyPlan() {
 
         setMainCat(newMainCat);
     };
-
-    const [subCatagory, setSubCat] = useState([]);
-
     const [tmpSubStruct, setTmpSub] = useState({
         id: `${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         data: {
@@ -72,7 +50,6 @@ export default function StudyPlan() {
             subName: ""
         }
     });
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         setTmpSub(prev => ({
@@ -83,7 +60,6 @@ export default function StudyPlan() {
             }
         }));
     };
-
     const submitAddSub = () => {
         const { allUnit, mainId, subName } = tmpSubStruct.data;
 
@@ -124,38 +100,6 @@ export default function StudyPlan() {
         setMsg("เพิ่มหมวดหมู่ย่อยแล้ว");
         setTimeout(() => { setType(""); setMsg(""); }, 3000);
     };
-
-    const fetchSubStructure = async () => {
-        setLoad(true);
-        try {
-            const dataSub = await getSubStructure();
-            setSubCat(dataSub);
-        } catch (err) {
-            console.log(err)
-            setType("error");
-            setMsg(err.message);
-        } finally {
-            setLoad(false);
-            setTimeout(() => {
-                setMsg(""); setType("");
-            }, 2500);
-        }
-    };
-
-    useEffect(() => {
-        setLoad(true);
-        if (studyPlanData.length > 0) {
-            setInputDis(true);
-            setPlanDetail({
-                planName: studyPlanData[0].data.planName,
-                planAllUnit: Number(studyPlanData[0].data.planAllUnit || 0),
-            });
-            fetchStrutureplan();
-            fetchSubStructure();
-        }
-        setLoad(false);
-    }, [studyPlanData]);
-
     const SaveAllAtFirsttime = async (e)=>{
         e.preventDefault()
         console.log(planDetail.planAllUnit===0 , planDetail.planName , mainCatagory.length===0)
@@ -195,9 +139,29 @@ export default function StudyPlan() {
         }
     }
 
-        return (
+    
+    useEffect(() => {
+        setLoad(true);
+        if (studyPlanData.length > 0) {
+            setInputDis(true);
+            setPlanDetail({
+                planName: studyPlanData[0].data.planName,
+                planAllUnit: Number(studyPlanData[0].data.planAllUnit || 0),
+            });
+        }
+        setLoad(false);
+    }, [studyPlanData]);
+    useEffect(() => {
+        setMainCat(mainCatagoryContext);
+    }, [mainCatagoryContext]);
+
+    useEffect(() => {
+        setSubCat(subCatagoryContext);
+    }, [subCatagoryContext]);
+
+    return (
         <div className="container pt-5">
-            <Loading status={false} />
+            <Loading status={isLoad} />
             <AlertMessage type={alertType} msg={alertMsg} />
 
             <div className="text-center mb-5">
