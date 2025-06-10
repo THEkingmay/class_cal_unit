@@ -268,14 +268,14 @@ export default function StudyPlan() {
                 <div className="shadow-sm p-4 mb-4 bg-white rounded">
                     <h2 className="h4 mb-3">หมวดหมู่ย่อย</h2>
 
-                    <button
+                    {studyPlanData.length===0 && <button
                     type="button"
                     data-bs-toggle="modal"
                     data-bs-target="#subStructModal"
                     className="btn btn-outline-secondary mb-3"
                     >
                     เพิ่มหมวดหมู่ย่อยในหมวดหมู่หลัก
-                    </button>
+                    </button>}
 
                     <div className="mb-3">
                     {mainCatagory.map((cat) =>
