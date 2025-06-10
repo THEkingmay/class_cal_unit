@@ -5,6 +5,8 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { getUserStudyplan  } from '../data/fireStore'
 import { getStructurePlan, getSubStructure } from "../data/fireStore";
 
+import { getAllClasses } from '../data/ClassData';
+
 import { auth } from '../data/UserAuth'
 import Loading from '../items/Loading'
 
@@ -21,6 +23,8 @@ export default function AuthWrapper({ children }) {
 
   const [mainCatagoryContext , setMainCat] = useState([]);
   const [subCatagoryContext , setSubCat] = useState([]);
+
+  const [allClassContext , setAllClass] = useState([])
 
   const fetchUersStudyplan = async () =>{
           try{
@@ -40,6 +44,17 @@ export default function AuthWrapper({ children }) {
               console.log(err.message)
           }
       }
+
+      const fetchUserClasses = async () =>{
+        try{
+          const data = await getAllClasses(currentUserID)
+          setAllClass(data)
+          console.log("Get all classes from users")
+        }catch(err){
+          console.log(err.message)
+        }
+      }
+
   useEffect(() => {
     setLoading(true)
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -66,6 +81,7 @@ export default function AuthWrapper({ children }) {
   useEffect(() => {
     let hasFetched = false;
     if (currentUserID && !hasFetched) {
+      fetchUserClasses()
       fetchUersStudyplan()
       hasFetched = true
     }
@@ -77,7 +93,7 @@ export default function AuthWrapper({ children }) {
     }
 
   return (
-    <AuthContext.Provider value={{ currentUserID, currEmail , navigate , studyPlanData ,mainCatagoryContext  ,subCatagoryContext , fetchUersStudyplan}}>
+    <AuthContext.Provider value={{fetchUserClasses,allClassContext , currentUserID, currEmail , navigate , studyPlanData ,mainCatagoryContext  ,subCatagoryContext , fetchUersStudyplan}}>
       {children}
     </AuthContext.Provider>
   )
