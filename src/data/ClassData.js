@@ -1,5 +1,5 @@
 import { db } from "./fireStore";
-import { setDoc , doc   ,addDoc , collection, getDocs } from "firebase/firestore";
+import { setDoc , doc  ,deleteDoc, collection, getDocs } from "firebase/firestore";
 
 // users/{userid}/classes/{classId}
 //  class : {
@@ -46,5 +46,14 @@ const addClassToCollection = async (userId , newDoc)=>{
     }
 }
 
+const deleteClassId = async (userId, id) =>{
+    try{
+        await deleteDoc(doc(db, 'users', userId, 'classes',id))
+        console.log("delete class id :  ", id)
+    }catch(err){
+        console.log(err.message)
+        throw new Error(err)
+    }
+}
 
-export {getAllClasses , addClassToCollection}
+export {getAllClasses , addClassToCollection , deleteClassId}
