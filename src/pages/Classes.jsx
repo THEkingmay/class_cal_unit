@@ -6,7 +6,7 @@ import { FaChevronRight } from "react-icons/fa";
 import Loading from "../items/Loading";
 import AlertMessage from "../items/AlertMessage";
 
-import { addClassToCollection , deleteClassId } from "../data/ClassData";
+import { addClassToCollection , deleteClassId ,updateClassInFirestore } from "../data/ClassData";
 
 const checkHavePlan = (navigate) =>{
     return(
@@ -153,7 +153,55 @@ export default function Classes(){
 
         closeModal()
     }
+    const [updateClass , setUpdateClass] = useState({
+        id:'',
+        data:{
+            classCode:'',
+            className:'',
+            unit:0,
+            year:0, // เช่นปี 1 ปี 2 3 4 5 ... 
+            semester:0, // เทอมเช่น เทอม 1 เทอม 2 หรือ 3 คือซัมเมอร์
+            mainId: '',
+            subId: ''
+        }
+    })
+    const [filterUpdateSubId , setFilterUpdate] = useState([])
+    useEffect(()=>{
+       const tmp= subCategories.filter(sub => 
+            sub.data.mainId === updateClass.data.mainId
+        );
+        console.log("tmp : ",tmp)
+        setFilterUpdate(tmp)
+    },[updateClass.data.mainId])
 
+    const  handleUpdate = async () =>{
+       try{
+        setLoad(true)
+         if(updateClass.data.classCode==='' || 
+            updateClass.data.className==='' || 
+            updateClass.data.unit===0 || 
+            updateClass.data.year===0 ||
+            updateClass.data.semester===0||
+            updateClass.data.mainId===''
+        ){throw new Error("กรุณากรอกข้อมูลให้ครบ")}
+
+        await updateClassInFirestore(currentUserID , updateClass.id , updateClass.data)
+        setMsg("แก้ไขสำเร็จ")
+        setType("success")
+
+        fetchUserClasses()
+
+       }catch(err){
+            setMsg(err.message)
+            setType('error')
+       }finally{
+            setLoad(false)
+            setTimeout(()=>{
+                setMsg("")
+                setType("")
+            },3000)
+       }
+    }
 
     const handleAddClass = (e) => {
         e.preventDefault(); // Prevent form submission
@@ -244,7 +292,26 @@ export default function Classes(){
                                                 <span className="text-muted">{classItem.data.className}  {'('+classItem.data.unit+')หน่วยกิต'}</span>
                                             </div>
                                             <div>
-                                                <button type="button" className="btn btn-warning me-2">แก้ไข</button>
+                                                <button 
+                                                type="button" 
+                                                className="btn btn-warning me-2"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#updateModal"
+                                                onClick={()=>setUpdateClass({
+                                                    id:classItem.id,
+                                                    data:{
+                                                        classCode:classItem.data.classCode,
+                                                        className:classItem.data.className,
+                                                        unit:classItem.data.unit,
+                                                        year:classItem.data.year, // เช่นปี 1 ปี 2 3 4 5 ... 
+                                                        semester:classItem.data.semester, // เทอมเช่น เทอม 1 เทอม 2 หรือ 3 คือซัมเมอร์
+                                                        mainId: classItem.data.mainId,
+                                                        subId: classItem.data.subId
+                                                    }
+                                                })}
+
+                                                >แก้ไข
+                                                </button>
                                                 <button 
                                                 onClick={()=>setDeleteClass({id:classItem.id,name:classItem.data.className,code:classItem.data.classCode})} 
                                                 type="button" 
@@ -310,7 +377,188 @@ export default function Classes(){
                             </div>
                             </div>
                         </div>
+                    </div>
+
+                    {/* update modal */}
+                    <div
+                        className="modal fade"
+                        id="updateModal"
+                        tabIndex="-1"
+                        aria-labelledby="updateModalLabel"
+                        aria-hidden="true"
+                        >
+                        <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header bg-warning text-black">
+                                <h5 className="modal-title" id="addClassModalLabel">แก้ไขรายวิชา</h5>
+                                <button
+                                type="button"
+                                className="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"
+                                ></button>
+                            </div>
+
+                            <div className="modal-body px-4 py-3">
+                                <div className="mb-3">
+                                <label className="form-label w-100 text-start">รหัสวิชา (classCode)</label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    value={updateClass.data.classCode}
+                                    onChange={(e) =>
+                                    setUpdateClass((prev) => ({
+                                        ...prev,
+                                        data: { ...prev.data, classCode: e.target.value },
+                                    }))
+                                    }
+                                />
+                                </div>
+
+                                <div className="mb-3">
+                                <label className="form-label w-100 text-start">ชื่อวิชา (className)</label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    value={updateClass.data.className}
+                                    onChange={(e) =>
+                                    setUpdateClass((prev) => ({
+                                        ...prev,
+                                        data: { ...prev.data, className: e.target.value },
+                                    }))
+                                    }
+                                />
+                                </div>
+
+                                <div className="mb-3">
+                                <label className="form-label w-100 text-start">หน่วยกิต (unit)</label>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    value={updateClass.data.unit}
+                                    onChange={(e) =>
+                                    setUpdateClass((prev) => ({
+                                        ...prev,
+                                        data: { ...prev.data, unit: parseInt(e.target.value) || 0 },
+                                    }))
+                                    }
+                                />
+                                </div>
+
+                            <div className="row">   
+                                <div className="col-md-6">
+                                    <div className="mb-3">
+                                    <label className="form-label fw-semibold">ปีการศึกษา (year)</label>
+                                    <input
+                                        type="number"
+                                        className="form-control form-control-sm"
+                                        value={updateClass.data.year}
+                                        onChange={(e) =>
+                                        setUpdateClass((prev) => ({
+                                            ...prev,
+                                            data: { ...prev.data, year: parseInt(e.target.value) || 0 },
+                                        }))
+                                        }
+                                    />
+                                    </div>
+                                </div>
+
+                                <div className="col-md-6">
+                                    <div className="mb-3">
+                                    <label className="form-label ">ภาคเรียน (semester)</label>
+                                    <select
+                                        className="form-select form-select-sm"
+                                        value={updateClass.data.semester}
+                                        onChange={(e) =>
+                                        setUpdateClass((prev) => ({
+                                            ...prev,
+                                            data: { ...prev.data, semester: Number(e.target.value) },
+                                        }))
+                                        }
+                                    >
+                                        <option value="">เลือกเทอม</option>
+                                        <option value="1">เทอม 1</option>
+                                        <option value="2">เทอม 2</option>
+                                        <option value="3">ซัมเมอร์</option>
+                                    </select>
+                                    </div>
+                                </div>
+                                </div>
+                                <div className="mb-3">
+                                <label htmlFor="mainCategoryId" className="form-label w-100 text-start">
+                                    หมวดหมู่หลัก <span className="text-danger">*</span>
+                                </label>
+                                <select
+                                    className="form-select"
+                                    id="mainCategoryId"
+                                    value={updateClass.data.mainId}
+                                    onChange={(e) => {
+                                    const selectedMainId = e.target.value;
+                                    setUpdateClass((prev) => ({
+                                        ...prev,
+                                        data: { ...prev.data, mainId: selectedMainId, subId: '' },
+                                    }));
+                                    }}
+                                    required
+                                >
+                                    <option value="">เลือกหมวดหมู่หลัก</option>
+                                    {mainCategories.map((main) => (
+                                    <option key={main.id} value={main.id}>
+                                        {main.data.structureName}
+                                    </option>
+                                    ))}
+                                </select>
+                                </div>
+
+                                {filterUpdateSubId.length > 0 && (
+                                <div className="mb-3">
+                                    <label htmlFor="subCategoryId" className="form-label w-100 text-start">
+                                    หมวดหมู่ย่อย
+                                    </label>
+                                    <select
+                                    className="form-select"
+                                    id="subCategoryId"
+                                    value={updateClass.data.subId}
+                                    onChange={(e) => {
+                                        const selectedSubId = e.target.value;
+                                        setUpdateClass((prev) => ({
+                                        ...prev,
+                                        data: { ...prev.data, subId: selectedSubId },
+                                        }));
+                                    }}
+                                    >
+                                    <option value="">เลือกหมวดหมู่ย่อย</option>
+                                    {filterUpdateSubId.map((sub) => (
+                                        <option key={sub.id} value={sub.id}>
+                                        {sub.data.subName}
+                                        </option>
+                                    ))}
+                                    </select>
+                                </div>
+                                )}
+                            </div>
+
+                            <div className="modal-footer bg-light rounded-bottom-4">
+                                <button
+                                type="button"
+                                className="btn btn-secondary px-4"
+                                data-bs-dismiss="modal"
+                                >
+                                ยกเลิก
+                                </button>
+                                <button
+                                type="button"
+                                className="btn btn-warning px-4"
+                                onClick={() => handleUpdate()}
+                                data-bs-dismiss="modal"
+                                >
+                                ยืนยันการแก้ไข
+                                </button>
+                            </div>
+                            </div>
                         </div>
+                        </div>
+
                 </div>
             );
             };

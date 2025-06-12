@@ -1,5 +1,5 @@
 import { db } from "./fireStore";
-import { setDoc , doc  ,deleteDoc, collection, getDocs } from "firebase/firestore";
+import { setDoc , doc  ,deleteDoc, collection, getDocs , updateDoc } from "firebase/firestore";
 
 // users/{userid}/classes/{classId}
 //  class : {
@@ -29,7 +29,7 @@ const getAllClasses = async (userId) => {
                 data: d.data()
             }
         })
-        console.log("Get all Classes")
+        console.log("Get all Classes : "  , result)
         return result
     } catch (err) {
         console.log(err)
@@ -56,4 +56,14 @@ const deleteClassId = async (userId, id) =>{
     }
 }
 
-export {getAllClasses , addClassToCollection , deleteClassId}
+const updateClassInFirestore = async (userId, classId , newData)=>{
+    try{
+        await updateDoc(doc(db,'users',userId,'classes',classId) , newData)
+        console.log("update data success")
+    }catch(err){
+        console.log(err.message)
+        throw new Error(err)
+    }
+}
+
+export {getAllClasses , addClassToCollection , deleteClassId ,  updateClassInFirestore }

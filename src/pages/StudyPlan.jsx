@@ -21,6 +21,7 @@ export default function StudyPlan() {
 
     const [mainCatagory, setMainCat] = useState([]);
     const [subCatagory, setSubCat] = useState([]);
+
     const handleMainCatagoryInput = (index, field, value) => {
         const newMainCat = [...mainCatagory];
         const updatedValue = field === "allUnit" ? Number(value || 0) : value;
@@ -30,7 +31,7 @@ export default function StudyPlan() {
         const totalMainUnit = newMainCat.reduce((sum, item) => sum + Number(item.data.allUnit || 0), 0);
 
         if (totalMainUnit > planDetail.planAllUnit) {
-            newMainCat[index].data[field] = 0
+            newMainCat[index].data['allUnit'] = 0
             setMainCat(newMainCat);
             setType("error");
             setMsg("หน่วยกิตรวมของหมวดหมู่หลักเกินจากแผนการเรียนแล้ว");
@@ -159,6 +160,33 @@ export default function StudyPlan() {
         setSubCat(subCatagoryContext);
     }, [subCatagoryContext]);
 
+    const [selMainIdToDelete , setMainDel] = useState({
+        id:'',
+        name:''
+    })
+    const handleDeleteMainCat = () =>{
+        const newMain = []
+        mainCatagory.forEach(main=>{
+            if(main.id!==selMainIdToDelete.id)newMain.push(main)
+        })
+        const newSub = [] 
+        subCatagory.forEach(sub => {
+            if(sub.mainId!==selMainIdToDelete.id)newSub.push(sub)
+        })
+        
+        setMainCat(newMain)
+        setSubCat(newSub)
+
+        setMainDel({
+            id:'',name:''
+        })
+
+        const modalElement = document.getElementById('deleteMain');
+        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+        if (modalInstance) modalInstance.hide();
+    }
+
+
     return (
         <div className="container pt-5">
             <Loading status={isLoad} />
@@ -258,6 +286,19 @@ export default function StudyPlan() {
                             }
                         />
                         </div>
+                        {studyPlanData.length===0 && <div className="mt-2 text-end">
+                            <button 
+                                className="btn btn-danger "
+                                type="button"
+                                data-bs-toggle="modal"
+                                data-bs-target="#deleteMain"
+                                onClick={()=>setMainDel({
+                                    id:cat.id,
+                                    name:cat.data.structureName
+                                })}
+                            >ลบหมวดหมู่หลัก
+                            </button>
+                        </div>}
                     </div>
                     ))}
                 </div>
@@ -409,6 +450,54 @@ export default function StudyPlan() {
                 </div>
             </div>
             </div>
+            
+
+            {/*modal delete main catagory*/}
+            <div
+                className="modal fade"
+                id="deleteMain"
+                tabIndex="-1"
+                aria-labelledby="deleteMain"
+                aria-hidden="true"
+                >
+                <div className="modal-dialog">
+                    <div className="modal-content">
+                    <div className="modal-header  bg-danger text-white">
+                        <h5 className="modal-title">
+                        ลบหมวดหมู่หลัก
+                        </h5>
+                        <button
+                        type="button"
+                        className="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"
+                        ></button>
+                    </div>
+                    <div className="modal-body">
+                        <div>
+                            คุณต้องการจะลบหมวดหมู่หลัก {selMainIdToDelete.name} ใช่ไหม ?
+                        </div>
+                    </div>
+                    <div className="modal-footer">
+                        <button
+                        type="button"
+                        className="btn btn-secondary"
+                        data-bs-dismiss="modal"
+                        >
+                        ปิด
+                        </button>
+                        <button
+                        type="button"
+                        className="btn btn-danger ps-4 pe-4"
+                        onClick={handleDeleteMainCat}
+                        >
+                        ลบ
+                        </button>
+                    </div>
+                    </div>
+                </div>
+                </div>
+
         </div>
         );
 
