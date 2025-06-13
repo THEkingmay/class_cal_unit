@@ -93,7 +93,7 @@ export default function AuthWrapper({ children }) {
     }
 
   return (
-    <AuthContext.Provider value={{fetchUserClasses,allClassContext , currentUserID, currEmail , navigate , studyPlanData ,mainCatagoryContext  ,subCatagoryContext , fetchUersStudyplan}}>
+    <AuthContext.Provider value={{fetchUserClasses, allClassContext , currentUserID, currEmail , navigate , studyPlanData  ,mainCatagoryContext  ,subCatagoryContext , fetchUersStudyplan}}>
       {children}
     </AuthContext.Provider>
   )
