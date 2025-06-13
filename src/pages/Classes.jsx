@@ -303,10 +303,10 @@ export default function Classes(){
                                                 </span>
                                                 <span className="text-muted pt-2 text-start">{classItem.data.className}  {'('+classItem.data.unit+') หน่วยกิต'}</span>
                                             </div>
-                                            <div>
+                                            <div className="d-flex flex-column d-md-block">
                                                 <button 
                                                 type="button" 
-                                                className="btn btn-warning me-2"
+                                                className="btn btn-warning mb-2 mb-md-0 me-md-2"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#updateModal"
                                                 onClick={()=>setUpdateClass({

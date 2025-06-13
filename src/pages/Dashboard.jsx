@@ -47,7 +47,10 @@ export default function Dashboard() {
             ชื่อแผนการเรียน : {studyPlanData[0].data.planName || ""}<br/>
             หน่วยกิตรวม : {studyPlanData[0].data.planAllUnit || ""}<br/>
             <br/>
-            (ตรงนี้เมจะใส่เนื้อหาวิเคราะห์แผนการเรียน เช่น จำนวนหน่วยกิต คอร์สที่ต้องเรียน เป็นต้น)
+            <p>
+              ขั้นตอนการคำนวน
+              1.ถ้าหมวดไหนเกิน กลายเป็นเสรีแม่ง
+            </p>
           </p>
         </div>
       </div>}
