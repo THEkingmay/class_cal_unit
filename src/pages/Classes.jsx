@@ -166,6 +166,7 @@ export default function Classes(){
         }
     })
     const [filterUpdateSubId , setFilterUpdate] = useState([])
+    
     useEffect(()=>{
        const tmp= subCategories.filter(sub => 
             sub.data.mainId === updateClass.data.mainId
@@ -263,7 +264,9 @@ export default function Classes(){
             return (
                 <div>
                     <div className="mb-4">
-                        <h5 className="fw-bold text-secondary">คุณมี {allClass.length} วิชา</h5>
+                        <h5 className="fw-bold text-secondary">คุณมี {allClass.length} วิชา 
+                            <span> {allClass.reduce((sum, item) => sum + item.data.unit, 0)} หน่วยกิต</span>
+                        </h5>
                     </div>
                     
                     {allYear.map(year => (
@@ -277,19 +280,28 @@ export default function Classes(){
                             if (classesInSemester.length === 0) return null;
 
                             return (
-                                <div key={`${year}-${semester}`} className="col-12 col-lg-4">
+                                <div key={`${year}-${semester}`} className="col-12 col-lg-6">
                                 <div className="card shadow-sm rounded-3 h-100">
                                     <div className="card-header bg-primary text-white rounded-top">
                                     <h6 className="mb-0">
                                         {semesterNames[semester]} <span className="badge bg-light text-primary ms-2">{classesInSemester.length} วิชา</span>
+                                        <span className="badge bg-light text-primary ms-2">{classesInSemester.reduce((sum,item)=>sum + item.data.unit , 0)} หน่วยกิต</span>
                                     </h6>
                                     </div>
                                     <ul className="list-group list-group-flush d-flex justify-content-center">
                                     {classesInSemester.map(classItem => (
                                         <li key={classItem.id} className="list-group-item d-flex align-items-center justify-content-between">
                                             <div className="d-flex flex-column">
-                                                <span className="fw-semibold text-start">{classItem.data.classCode}</span>
-                                                <span className="text-muted">{classItem.data.className}  {'('+classItem.data.unit+')หน่วยกิต'}</span>
+                                                <span className="fw-semibold text-start">
+                                                    {classItem.data.classCode}
+                                                    <span className="badge ms-3 bg-primary">
+                                                    {mainCategories.find(m => m.id === classItem.data.mainId)?.data?.structureName}
+                                                    </span>
+                                                    <span className="badge ms-1 bg-secondary">
+                                                    {subCategories.find(s=>s.id===classItem.data.subId)?.data?.subName}
+                                                    </span>
+                                                </span>
+                                                <span className="text-muted pt-2 text-start">{classItem.data.className}  {'('+classItem.data.unit+') หน่วยกิต'}</span>
                                             </div>
                                             <div>
                                                 <button 
