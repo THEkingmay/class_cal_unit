@@ -30,6 +30,7 @@ const login = async (email, password) => {
   try {
     await signInWithEmailAndPassword(auth, email, password);
   } catch (err) {
+    console.log(err)
     throw new Error(err.message);
   }
 };
