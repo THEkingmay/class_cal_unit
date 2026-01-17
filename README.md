@@ -1,12 +1,8 @@
-# React + Vite
+<img width="1876" height="851" alt="image" src="https://github.com/user-attachments/assets/e016da86-a4f2-43de-9076-c88eea63d970" />
+สามารถดูได้ว่าเราเรียนแต่ละหมวดหมู่ไปเท่าไรแล้วบ้าง
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<img width="1876" height="854" alt="image" src="https://github.com/user-attachments/assets/6a4548a7-e867-484f-85f0-814a741d3071" />
+สร้างแผนการเรียนได้เอง
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+<img width="1851" height="871" alt="image" src="https://github.com/user-attachments/assets/7a44c525-84c1-4d8d-b5b2-c289dbde2f46" />
+ตรวจสอบรายวิชาที่่เรียนไปแล้วได้
